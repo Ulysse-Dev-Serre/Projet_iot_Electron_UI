@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serre Connectée</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#0a0a0f',
+              surface: '#12121a',
+              elevated: '#1a1a28',
+              border: '#252537',
+              hover: '#2a2a3e'
+            },
+            neon: {
+              cyan: '#00f0ff',
+              purple: '#b794f6',
+              green: '#00ff88',
+              orange: '#ff8c42'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.8); }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+    .glass {
+      backdrop-filter: blur(16px);
+      background: rgba(18, 18, 26, 0.7);
+    }
+    .glow-border {
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+    }
+    .glow-border:hover {
+      border-color: rgba(0, 240, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    }
+    .scan-line {
+      position: relative;
+      overflow: hidden;
+    }
+    .scan-line::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
+      animation: scan 3s linear infinite;
+    }
+    @keyframes scan {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    .tab-button {
+      position: relative;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-button:hover {
+      color: #9ca3af;
+    }
+    .tab-button.active {
+      color: #00f0ff;
+      border-bottom-color: #00f0ff;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-dark-bg text-gray-100 min-h-screen font-mono antialiased">
+  
+  <!-- Header -->
+  <header class="sticky top-0 z-50 glass border-b border-dark-border">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <svg class="w-10 h-10 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+            </svg>
+            <div class="absolute inset-0 blur-lg opacity-50">
+              <svg class="w-10 h-10 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white tracking-wider">SERRE CONNECTÉE</h1>
+            <p class="text-xs text-neon-cyan uppercase tracking-widest">Control System v1.0</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-2">
+            <div id="connection-status" class="w-2 h-2 rounded-full bg-gray-600"></div>
+            <span id="connection-text" class="text-xs text-gray-400 uppercase tracking-wider">Offline</span>
+          </div>
+          <button onclick="openSettingsModal()" class="p-2 hover:bg-dark-elevated rounded-lg transition-all glow-border" title="Connexion">
+            <svg class="w-5 h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </button>
+          <button onclick="openConfigModal()" class="p-2 hover:bg-dark-elevated rounded-lg transition-all glow-border" title="Configuration">
+            <svg class="w-5 h-5 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs Navigation -->
+  <div class="max-w-7xl mx-auto px-6 pt-6">
+    <div class="flex gap-2 border-b border-dark-border">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-button active px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all">
+        Dashboard
+      </button>
+      <button onclick="switchTab('history')" id="tab-history" class="tab-button px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all">
+        Historique
+      </button>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Dashboard Tab -->
+    <div id="content-dashboard">
+    
+    <!-- Config Display (paramètres actifs en haut) -->
+    <section class="fade-in">
+      <div class="bg-dark-surface/50 border border-dark-border rounded-lg p-3">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+          <div class="text-xs text-gray-600 uppercase tracking-widest">Paramètres actifs</div>
+          <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+            <span>LEDs configurées entre : <span id="config-leds" class="text-gray-400">9h-20h</span></span>
+            <span>Humidificateur déclenché entre : <span id="config-humidity" class="text-gray-400">75%-84.9%</span></span>
+            <span>Max CO2 : <span id="config-co2" class="text-gray-400">1200ppm</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alert -->
+    <div id="sensor-alert" class="hidden fade-in p-4 bg-red-500/10 border border-red-500/30 rounded-lg glow-border">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <span class="text-sm text-red-300 uppercase tracking-wide">Capteur défaillant - Vérifier la connexion</span>
+      </div>
+    </div>
+
+    <!-- Sensors Grid -->
+    <section class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Temperature -->
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border scan-line group hover:border-neon-cyan/50 transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 bg-neon-cyan/10 rounded-lg group-hover:bg-neon-cyan/20 transition-all">
+              <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <div class="text-xs text-gray-500 uppercase tracking-widest">Sensor 01</div>
+          </div>
+          <div class="space-y-2">
+            <p class="text-xs text-gray-400 uppercase tracking-widest">Température</p>
+            <div class="flex items-baseline gap-2">
+              <span id="temperature" class="text-4xl font-bold text-white tracking-tight">--</span>
+              <span class="text-lg text-gray-500">°C</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Humidity -->
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border scan-line group hover:border-neon-cyan/50 transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 bg-neon-cyan/10 rounded-lg group-hover:bg-neon-cyan/20 transition-all">
+              <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+              </svg>
+            </div>
+            <div class="text-xs text-gray-500 uppercase tracking-widest">Sensor 02</div>
+          </div>
+          <div class="space-y-2">
+            <p class="text-xs text-gray-400 uppercase tracking-widest">Humidité</p>
+            <div class="flex items-baseline gap-2">
+              <span id="humidity" class="text-4xl font-bold text-white tracking-tight">--</span>
+              <span class="text-lg text-gray-500">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CO2 -->
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border scan-line group hover:border-neon-cyan/50 transition-all">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 bg-neon-cyan/10 rounded-lg group-hover:bg-neon-cyan/20 transition-all">
+              <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+              </svg>
+            </div>
+            <div class="text-xs text-gray-500 uppercase tracking-widest">Sensor 03</div>
+          </div>
+          <div class="space-y-2">
+            <p class="text-xs text-gray-400 uppercase tracking-widest">CO2</p>
+            <div class="flex items-baseline gap-2">
+              <span id="co2" class="text-4xl font-bold text-white tracking-tight">--</span>
+              <span class="text-lg text-gray-500">ppm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timestamp -->
+      <div class="mt-4 text-center">
+        <p class="text-xs text-gray-600 uppercase tracking-widest">Dernière mise à jour : <span id="timestamp" class="text-gray-400">--</span></p>
+      </div>
+    </section>
+
+    <!-- Actuators -->
+    <section class="fade-in space-y-4">
+      <!-- LEDs -->
+      <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-yellow-500/10 rounded-lg">
+              <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1">
+                <h3 class="text-base font-bold text-white uppercase tracking-wide">Éclairage LED</h3>
+                <span id="leds-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-700 rounded text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  OFF
+                </span>
+                <span id="leds-mode" class="px-2.5 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-bold uppercase tracking-wider">AUTO</span>
+              </div>
+              <p class="text-xs text-gray-500 uppercase tracking-wider">System Lighting Control</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-leds-on" class="px-5 py-2.5 bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/50 text-neon-green rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-neon-green/20">
+              Power On
+            </button>
+            <button id="btn-leds-off" class="px-5 py-2.5 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all hover:border-gray-500">
+              Power Off
+            </button>
+            <button id="btn-leds-auto" class="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20" title="Remettre uniquement les LEDs en mode automatique">
+              Auto
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Humidifier -->
+      <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-cyan-500/10 rounded-lg">
+              <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1">
+                <h3 class="text-base font-bold text-white uppercase tracking-wide">Humidificateur</h3>
+                <span id="humidifier-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-700 rounded text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  OFF
+                </span>
+                <span id="humidifier-mode" class="px-2.5 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-bold uppercase tracking-wider">AUTO</span>
+              </div>
+              <p class="text-xs text-gray-500 uppercase tracking-wider">Humidity Control System</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-humidifier-on" class="px-5 py-2.5 bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/50 text-neon-green rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-neon-green/20">
+              Power On
+            </button>
+            <button id="btn-humidifier-off" class="px-5 py-2.5 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all hover:border-gray-500">
+              Power Off
+            </button>
+            <button id="btn-humidifier-auto" class="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20" title="Remettre uniquement l'humidificateur en mode automatique">
+              Auto
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventilation -->
+      <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-purple-500/10 rounded-lg">
+              <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1">
+                <h3 class="text-base font-bold text-white uppercase tracking-wide">Ventilation</h3>
+                <span id="ventilation-status" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-700 rounded text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                  OFF
+                </span>
+                <span id="ventilation-mode" class="px-2.5 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-bold uppercase tracking-wider">AUTO</span>
+              </div>
+              <p class="text-xs text-gray-500 uppercase tracking-wider">Air Circulation Control</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-ventilation-on" class="px-5 py-2.5 bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/50 text-neon-green rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-neon-green/20">
+              Power On
+            </button>
+            <button id="btn-ventilation-off" class="px-5 py-2.5 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all hover:border-gray-500">
+              Power Off
+            </button>
+            <button id="btn-ventilation-auto" class="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 rounded text-sm font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20" title="Remettre uniquement la ventilation en mode automatique">
+              Auto
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Controls -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Mode AUTO Global -->
+        <div class="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-blue-500/20 rounded-lg">
+                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white uppercase tracking-wide">Mode AUTO Global</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Remettre tous les appareils en automatique</p>
+              </div>
+            </div>
+            <button id="btn-auto-all" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-bold uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50">
+              Auto Mode (Tout)
+            </button>
+          </div>
+        </div>
+
+        <!-- Emergency Stop -->
+        <div class="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-red-500/20 rounded-lg">
+                <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white uppercase tracking-wide">Arrêt d'urgence</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Emergency Shutdown Protocol</p>
+              </div>
+            </div>
+            <button id="btn-emergency" class="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-red-500/30 hover:shadow-red-500/50">
+              Emergency Stop
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+    <!-- End Dashboard Tab -->
+
+    <!-- History Tab -->
+    <div id="content-history" class="hidden">
+      
+      <section class="fade-in space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold text-white uppercase tracking-wider">Historique des données</h2>
+          <div class="flex gap-2">
+            <button onclick="loadHistory(24)" class="px-4 py-2 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all">
+              24h
+            </button>
+            <button onclick="loadHistory(48)" class="px-4 py-2 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all">
+              48h
+            </button>
+            <button onclick="loadHistory(168)" class="px-4 py-2 bg-dark-elevated hover:bg-dark-hover border border-dark-border text-gray-300 rounded text-sm font-bold uppercase tracking-wider transition-all">
+              7 jours
+            </button>
+          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+          <canvas id="historyChart"></canvas>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Température</div>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Moyenne:</span>
+                <span id="temp-avg" class="text-white font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Min:</span>
+                <span id="temp-min" class="text-neon-cyan font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Max:</span>
+                <span id="temp-max" class="text-neon-orange font-bold">--</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Humidité</div>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Moyenne:</span>
+                <span id="hum-avg" class="text-white font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Min:</span>
+                <span id="hum-min" class="text-neon-cyan font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Max:</span>
+                <span id="hum-max" class="text-neon-orange font-bold">--</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">CO2</div>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Moyenne:</span>
+                <span id="co2-avg" class="text-white font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Min:</span>
+                <span id="co2-min" class="text-neon-cyan font-bold">--</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Max:</span>
+                <span id="co2-max-hist" class="text-neon-orange font-bold">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+    <!-- End History Tab -->
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-dark-surface border border-neon-cyan/30 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl shadow-neon-cyan/10">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-white uppercase tracking-wider">Connexion</h3>
+        <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white transition-all">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">URL Raspberry Pi</label>
+          <input type="text" id="config-base-url" placeholder="http://10.0.0.216:5000" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-cyan focus:border-transparent transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">API Key</label>
+          <input type="password" id="config-api-key" placeholder="test-key" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-cyan focus:border-transparent transition-all">
+        </div>
+        <button onclick="saveConnectionSettings()" class="w-full px-6 py-3 bg-neon-cyan/20 hover:bg-neon-cyan/30 border border-neon-cyan/50 text-neon-cyan rounded font-bold uppercase tracking-wider transition-all hover:shadow-lg hover:shadow-neon-cyan/20">
+          Connecter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Modal -->
+  <div id="config-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-dark-surface border border-neon-purple/30 rounded-lg p-6 max-w-2xl w-full mx-4 shadow-2xl shadow-neon-purple/10">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-white uppercase tracking-wider">Configuration Système</h3>
+        <button onclick="closeConfigModal()" class="text-gray-400 hover:text-white transition-all">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">LEDs ON (heure)</label>
+          <input type="number" id="led-start" min="0" max="23" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">LEDs OFF (heure)</label>
+          <input type="number" id="led-end" min="0" max="23" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Humidité ON (%)</label>
+          <input type="number" id="humidity-on" min="0" max="100" step="0.1" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Humidité OFF (%)</label>
+          <input type="number" id="humidity-off" min="0" max="100" step="0.1" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">CO2 MAX (ppm)</label>
+          <input type="number" id="co2-max" min="0" max="5000" step="10" 
+            class="w-full px-4 py-3 bg-dark-elevated border border-dark-border text-white rounded font-mono focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all">
+        </div>
+      </div>
+      <button id="btn-save-config" class="w-full px-6 py-3 bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple/50 text-neon-purple rounded font-bold uppercase tracking-wider transition-all hover:shadow-lg hover:shadow-neon-purple/20">
+        Enregistrer
+      </button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
