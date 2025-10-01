@@ -2,7 +2,9 @@ let API_KEY = localStorage.getItem('api_key') || CONFIG.API_KEY;
 let BASE_URL = localStorage.getItem('base_url') || CONFIG.BASE_URL;
 
 let isConnected = false;
-let historyChart = null;
+let tempChart = null;
+let humChart = null;
+let co2Chart = null;
 
 function switchTab(tabName) {
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -13,7 +15,7 @@ function switchTab(tabName) {
   
   document.getElementById(`content-${tabName}`).classList.remove('hidden');
   
-  if (tabName === 'history' && !historyChart) {
+  if (tabName === 'history' && !tempChart) {
     loadHistory(24);
   }
 }
@@ -335,11 +337,11 @@ async function loadHistory(hours = 24) {
   try {
     let limit = 500;
     if (hours === 24) {
-      limit = 100;
+      limit = 5760;  // 24h × 240 mesures/h (mesures toutes les 15s)
     } else if (hours === 48) {
-      limit = 200;
+      limit = 11520;  // 48h × 240 mesures/h
     } else if (hours === 168) {
-      limit = 500;
+      limit = 40320;  // 168h × 240 mesures/h
     }
     
     const response = await fetch(`${BASE_URL}/api/history?limit=${limit}`);
@@ -395,142 +397,161 @@ async function loadHistory(hours = 24) {
       co2: group.co2s.length > 0 ? group.co2s.reduce((a, b) => a + b) / group.co2s.length : 0
     })).sort((a, b) => a.timestamp - b.timestamp);
     
-    const labels = data.map(d => {
-      if (hours === 168) {
-        return d.timestamp.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + 
-               d.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const labels = data.map((d, index) => {
+      const currentDate = d.timestamp.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+      const time = d.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      
+      if (index === 0) {
+        return currentDate + '\n' + time;
       }
-      return d.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      
+      const previousDate = data[index - 1].timestamp.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+      
+      if (currentDate !== previousDate) {
+        return currentDate + '\n' + time;
+      }
+      
+      return time;
     });
     
     const temps = data.map(d => d.temperature);
     const hums = data.map(d => d.humidity);
     const co2s = data.map(d => d.co2);
 
-    if (historyChart) {
-      historyChart.destroy();
-    }
+    if (tempChart) tempChart.destroy();
+    if (humChart) humChart.destroy();
+    if (co2Chart) co2Chart.destroy();
 
-    const ctx = document.getElementById('historyChart').getContext('2d');
-    historyChart = new Chart(ctx, {
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(18, 18, 26, 0.95)',
+          titleColor: '#00f0ff',
+          bodyColor: '#9ca3af',
+          borderColor: '#252537',
+          borderWidth: 1,
+          padding: 12,
+          displayColors: true,
+          titleFont: { family: 'monospace', size: 12 },
+          bodyFont: { family: 'monospace', size: 11 }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { 
+            color: '#6b7280',
+            font: { family: 'monospace', size: 10 },
+            maxRotation: 0,
+            minRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 12
+          },
+          grid: { 
+            color: '#252537',
+            drawTicks: false
+          }
+        }
+      }
+    };
+
+    tempChart = new Chart(document.getElementById('tempChart'), {
       type: 'line',
       data: {
         labels: labels,
-        datasets: [
-          {
-            label: 'Température (°C)',
-            data: temps,
-            borderColor: '#00f0ff',
-            backgroundColor: 'rgba(0, 240, 255, 0.1)',
-            borderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-            tension: 0.4,
-            yAxisID: 'y-temp'
-          },
-          {
-            label: 'Humidité (%)',
-            data: hums,
-            borderColor: '#b794f6',
-            backgroundColor: 'rgba(183, 148, 246, 0.1)',
-            borderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-            tension: 0.4,
-            yAxisID: 'y-hum'
-          },
-          {
-            label: 'CO2 (ppm)',
-            data: co2s,
-            borderColor: '#00ff88',
-            backgroundColor: 'rgba(0, 255, 136, 0.1)',
-            borderWidth: 2,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-            tension: 0.4,
-            yAxisID: 'y-co2'
-          }
-        ]
+        datasets: [{
+          label: 'Température',
+          data: temps,
+          borderColor: '#00f0ff',
+          backgroundColor: 'rgba(0, 240, 255, 0.1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true
+        }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: {
-              color: '#9ca3af',
-              font: { family: 'monospace', size: 11 },
-              padding: 15,
-              usePointStyle: true
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(18, 18, 26, 0.95)',
-            titleColor: '#00f0ff',
-            bodyColor: '#9ca3af',
-            borderColor: '#252537',
-            borderWidth: 1,
-            padding: 12,
-            displayColors: true,
-            titleFont: { family: 'monospace', size: 12 },
-            bodyFont: { family: 'monospace', size: 11 }
-          }
-        },
+        ...commonOptions,
         scales: {
-          x: {
-            ticks: { 
-              color: '#6b7280',
-              font: { family: 'monospace', size: 10 },
-              maxRotation: 0,
-              minRotation: 0,
-              autoSkip: true,
-              maxTicksLimit: 12
-            },
-            grid: { 
-              color: '#252537',
-              drawTicks: false
-            }
-          },
-          'y-temp': {
-            type: 'linear',
-            position: 'left',
+          ...commonOptions.scales,
+          y: {
             ticks: { 
               color: '#00f0ff', 
               font: { family: 'monospace', size: 10 },
               callback: function(value) { return Math.round(value) + '°C'; }
             },
             grid: { color: 'rgba(0, 240, 255, 0.1)' }
-          },
-          'y-hum': {
-            type: 'linear',
-            position: 'left',
+          }
+        }
+      }
+    });
+
+    humChart = new Chart(document.getElementById('humChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Humidité',
+          data: hums,
+          borderColor: '#b794f6',
+          backgroundColor: 'rgba(183, 148, 246, 0.1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          y: {
             ticks: { 
               color: '#b794f6', 
               font: { family: 'monospace', size: 10 },
               callback: function(value) { return Math.round(value) + '%'; }
             },
-            grid: { drawOnChartArea: false }
-          },
-          'y-co2': {
-            type: 'linear',
-            position: 'right',
+            grid: { color: 'rgba(183, 148, 246, 0.1)' }
+          }
+        }
+      }
+    });
+
+    co2Chart = new Chart(document.getElementById('co2Chart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'CO2',
+          data: co2s,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0, 255, 136, 0.1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        ...commonOptions,
+        scales: {
+          ...commonOptions.scales,
+          y: {
             ticks: { 
               color: '#00ff88', 
               font: { family: 'monospace', size: 10 },
-              callback: function(value) { return Math.round(value); }
+              callback: function(value) { return Math.round(value) + ' ppm'; }
             },
-            grid: { drawOnChartArea: false },
-            title: { 
-              display: true, 
-              text: 'ppm', 
-              color: '#00ff88',
-              font: { family: 'monospace', size: 10 }
-            }
+            grid: { color: 'rgba(0, 255, 136, 0.1)' }
           }
         }
       }

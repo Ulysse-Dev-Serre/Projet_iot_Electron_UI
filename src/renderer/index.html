@@ -414,9 +414,31 @@
           </div>
         </div>
 
-        <!-- Chart Container -->
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
-          <canvas id="historyChart"></canvas>
+        <!-- Chart Containers - 3 graphiques séparés -->
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Température -->
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <h3 class="text-sm font-bold text-neon-cyan uppercase tracking-wider mb-4">Température (°C)</h3>
+            <div style="height: 250px;">
+              <canvas id="tempChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Humidité -->
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <h3 class="text-sm font-bold text-neon-purple uppercase tracking-wider mb-4">Humidité (%)</h3>
+            <div style="height: 250px;">
+              <canvas id="humChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- CO2 -->
+          <div class="bg-dark-surface border border-dark-border rounded-lg p-6 glow-border">
+            <h3 class="text-sm font-bold text-neon-green uppercase tracking-wider mb-4">CO2 (ppm)</h3>
+            <div style="height: 250px;">
+              <canvas id="co2Chart"></canvas>
+            </div>
+          </div>
         </div>
 
         <!-- Stats Cards -->
