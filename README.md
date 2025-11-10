@@ -8,21 +8,21 @@ Interface de contrôle et monitoring en temps réel pour le projet de serre conn
 
 ---
 
-## 📝 Description
+## Description
 
 Application desktop Electron permettant de **contrôler et surveiller** une serre automatisée connectée à un Raspberry Pi.
 
 **Fonctionnalités principales :**
-- 📊 Monitoring temps réel (température, humidité, CO2)
-- 🎛️ Contrôle manuel des actionneurs (LEDs, humidificateur, ventilation)
-- ⚙️ Configuration des seuils et horaires
-- 📈 Historique graphique des données (24h, 48h, 7 jours)
-- 🚨 Arrêt d'urgence
-- 🌐 Interface moderne dark mode (style high-tech/cyberpunk)
+- Monitoring temps réel (température, humidité, CO2)
+- Contrôle manuel des actionneurs (LEDs, humidificateur, ventilation)
+- Configuration des seuils et horaires
+- Historique graphique des données (24h, 48h, 7 jours)
+- Arrêt d'urgence
+- Interface moderne dark mode (style high-tech/cyberpunk)
 
 ---
 
-## 🚀 Démarrage rapide
+## Démarrage rapide
 
 ```bash
 # Cloner le repository
@@ -40,7 +40,7 @@ npm start
 
 ---
 
-## 🛠️ Stack technique
+##  Stack technique
 
 | Technologie | Usage |
 |-------------|-------|
@@ -57,18 +57,18 @@ npm start
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 | Document | Description |
 |----------|-------------|
-| **[SETUP.md](docs/SETUP.md)** | 📖 Guide d'installation complet |
-| **[API.md](docs/API.md)** | 🌐 Documentation de l'API REST |
-| **[BUILD_GUIDE.md](docs/BUILD_GUIDE.md)** | 📦 Compiler en .exe |
-| **[AGENTS.md](AGENTS.md)** | 🤖 Guide pour agents IA |
+| **[SETUP.md](docs/SETUP.md)** |  Guide d'installation complet |
+| **[API.md](docs/API.md)** |  Documentation de l'API REST |
+| **[BUILD_GUIDE.md](docs/BUILD_GUIDE.md)** |  Compiler en .exe |
+| **[AGENTS.md](AGENTS.md)** |  Guide pour agents IA |
 
 ---
 
-## 🎮 Commandes
+##  Commandes
 
 ```bash
 npm start          # Lancer l'application
@@ -79,14 +79,14 @@ npm run build:win  # Compiler pour Windows (.exe)
 
 ---
 
-## 🔗 Projet Backend
+##  Projet Backend
 
 Cette interface communique avec le backend IoT :
 **[Projet IoT Raspberry Pi](https://github.com/Ulysse-Dev-Serre/Projet_IoT_RaspberryPi)**
 
 ---
 
-## 📸 Captures d'écran
+##  Captures d'écran
 
 ### Dashboard
 Monitoring en temps réel et contrôle des actionneurs.
@@ -96,7 +96,7 @@ Graphiques interactifs sur 24h, 48h ou 7 jours avec statistiques (min/max/moyenn
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 Par défaut, l'application se connecte à :
 - **URL** : `http://10.0.0.216:5000`
@@ -112,13 +112,13 @@ Contributions bienvenues ! Ouvre une issue ou une pull request.
 
 ---
 
-## 📄 Licence
+##  Licence
 
 MIT © Ulysse
 
 ---
 
-## 🔧 Support
+##  Support
 
 - **Issues** : [GitHub Issues](https://github.com/Ulysse-Dev-Serre/Projet_iot_interface/issues)
 - **Backend** : [Projet IoT Backend](https://github.com/Ulysse-Dev-Serre/Projet_IoT_RaspberryPi)

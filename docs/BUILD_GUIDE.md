@@ -1,6 +1,6 @@
 # Guide de Compilation - Serre Connectée
 
-## 🚀 Compiler l'application en .exe
+##  Compiler l'application en .exe
 
 ### Prérequis
 - Node.js installé
@@ -31,7 +31,7 @@ npm run build
 
 ---
 
-## 📦 Résultat
+##  Résultat
 
 Après la compilation, tu trouveras dans le dossier **`dist/`** :
 
@@ -47,7 +47,7 @@ Après la compilation, tu trouveras dans le dossier **`dist/`** :
 
 ---
 
-## 🎨 Ajouter une icône (optionnel)
+##  Ajouter une icône (optionnel)
 
 Pour avoir une belle icône d'application :
 
@@ -61,7 +61,7 @@ Si tu n'as pas d'icône, l'app utilisera l'icône Electron par défaut.
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 La configuration est dans `package.json` sous la clé `"build"` :
 
@@ -72,7 +72,7 @@ La configuration est dans `package.json` sous la clé `"build"` :
 
 ---
 
-## 💡 Conseils
+##  Conseils
 
 ### Tester avant de compiler
 ```bash
@@ -100,7 +100,7 @@ C'est normal pour une app Electron !
 
 ---
 
-## 🐛 Problèmes courants
+##  Problèmes courants
 
 **Erreur "icon not found"**
 → Ignore ou ajoute une icône dans `build/icon.ico`
@@ -113,7 +113,7 @@ C'est normal pour une app Electron !
 
 ---
 
-## 📝 Distribution
+##  Distribution
 
 Pour distribuer ton .exe :
 1. Va dans `dist/`
@@ -123,7 +123,7 @@ Pour distribuer ton .exe :
 
 ---
 
-## 🔄 Mises à jour
+##  Mises à jour
 
 Pour changer la version :
 1. Modifie `"version": "1.0.0"` dans `package.json`

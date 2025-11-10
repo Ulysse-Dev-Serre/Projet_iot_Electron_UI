@@ -4,7 +4,7 @@ Guide complet pour installer et démarrer l'interface Electron de contrôle de l
 
 ---
 
-## 📋 Prérequis
+##  Prérequis
 
 Avant de commencer, assure-toi d'avoir installé :
 
@@ -21,7 +21,7 @@ Avant de commencer, assure-toi d'avoir installé :
 
 ---
 
-## 🚀 Installation depuis GitHub
+##  Installation depuis GitHub
 
 ### 1. Cloner le repository
 
@@ -41,11 +41,11 @@ Cette commande installe :
 - electron-builder (pour compiler)
 - Chart.js (pour les graphiques)
 
-⏱️ **Temps d'installation :** 2-3 minutes
+ **Temps d'installation :** 2-3 minutes
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Connexion au Raspberry Pi
 
@@ -74,7 +74,7 @@ L'application est préconfigurée pour se connecter à :
 
 ---
 
-## 🎯 Démarrage
+##  Démarrage
 
 ### Mode développement (avec DevTools)
 
@@ -94,7 +94,7 @@ Lance l'application en mode utilisateur.
 
 ---
 
-## 🛠️ Vérifier la connexion
+##  Vérifier la connexion
 
 ### 1. Tester le Raspberry Pi
 
@@ -165,7 +165,7 @@ Projet_iot_interface/
 
 ---
 
-## 🔧 Commandes disponibles
+##  Commandes disponibles
 
 | Commande | Description |
 |----------|-------------|
@@ -179,7 +179,7 @@ Projet_iot_interface/
 
 ---
 
-## 🐛 Résolution des problèmes
+##  Résolution des problèmes
 
 ### L'application ne se connecte pas
 
@@ -247,23 +247,23 @@ npm update
 
 ---
 
-## 📊 Fonctionnalités
+##  Fonctionnalités
 
 ### Onglet Dashboard
-- ✅ Affichage temps réel (température, humidité, CO2)
-- ✅ Contrôle manuel des actionneurs (LEDs, humidificateur, ventilation)
-- ✅ Mode automatique individuel ou global
-- ✅ Arrêt d'urgence
-- ✅ Configuration des seuils
+-  Affichage temps réel (température, humidité, CO2)
+-  Contrôle manuel des actionneurs (LEDs, humidificateur, ventilation)
+-  Mode automatique individuel ou global
+-  Arrêt d'urgence
+-  Configuration des seuils
 
 ### Onglet Historique
-- ✅ Graphiques sur 24h, 48h ou 7 jours
-- ✅ Statistiques (moyenne, min, max)
-- ✅ Données groupées par heure/4h/12h
+-  Graphiques sur 24h, 48h ou 7 jours
+-  Statistiques (moyenne, min, max)
+-  Données groupées par heure/4h/12h
 
 ---
 
-## 📞 Support
+##  Support
 
 **Problème avec le backend (Raspberry Pi) :**
 - Voir la documentation du projet backend
@@ -274,7 +274,7 @@ npm update
 
 ---
 
-## 🎨 Personnalisation
+##  Personnalisation
 
 ### Changer l'intervalle de polling
 
@@ -301,7 +301,7 @@ tailwind.config = {
 
 ---
 
-## 📝 Notes importantes
+##  Notes importantes
 
 - L'application communique avec le Raspberry Pi via HTTP (pas HTTPS)
 - Les données sont rafraîchies toutes les 10 secondes
@@ -311,7 +311,7 @@ tailwind.config = {
 
 ---
 
-## ✅ Checklist de démarrage
+##  Checklist de démarrage
 
 - [ ] Node.js installé (>= v16)
 - [ ] Git installé
@@ -326,4 +326,4 @@ tailwind.config = {
 
 ---
 
-**Bon développement ! 🚀**
+
